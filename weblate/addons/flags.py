@@ -63,7 +63,7 @@ class TargetEditAddon(FlagBase):
     name = 'weblate.flags.target_edit'
     verbose = _('Flag new translations to need edit')
     description = _(
-        'Whenever new translation unit is imported from the VCS, it is '
+        'Whenever a new translation unit is imported from the VCS, it is '
         'flagged as needing editing in Weblate. This way you can enforce '
         'editing source strings from developers.'
     )
