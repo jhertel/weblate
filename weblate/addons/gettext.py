@@ -137,42 +137,37 @@ class UpdateConfigureAddon(GettextBaseAddon):
 
     @classmethod
     def is_compatible(cls, component):
-        if not super(UpdateConfigureAddon, cls).is_compatible(component):
-            return False
-        if not component.can_add_new_language():
-            return False
-        for name in cls.get_configure_paths(component):
-            if not os.path.exists(name):
-                continue
-            with open(name) as handle:
-                if 'ALL_LINGUAS="' in handle.read():
-                    return True
+        if super(UpdateConfigureAddon, cls).is_compatible(component):
+            if component.can_add_new_language():
+                for name in cls.get_configure_paths(component):
+                    if os.path.exists(name):
+                        with open(name) as handle:
+                            if 'ALL_LINGUAS="' in handle.read():
+                                return True
         return False
 
     def post_add(self, translation):
         for path in self.get_configure_paths(translation.subproject):
-            if not os.path.exists(path):
-                continue
-            with open(path, 'r') as handle:
-                lines = handle.readlines()
+            if os.path.exists(path):
+                with open(path, 'r') as handle:
+                    lines = handle.readlines()
 
-            for i, line in enumerate(lines):
-                stripped = line.strip()
-                # Comment
-                if stripped.startswith('#'):
-                    continue
-                if not stripped.startswith('ALL_LINGUAS="'):
-                    continue
-                lines[i] = '{}{} {}\n'.format(
-                    stripped[:13],
-                    translation.language_code,
-                    stripped[13:],
-                )
+                for i, line in enumerate(lines):
+                    stripped = line.strip()
+                    if not stripped.startswith('#'): # Skip comments.
+                        if stripped.startswith('ALL_LINGUAS="'):
+                            # Add the new language code in front of 
+                            # the other language codes.
+                            lines[i] = '{}{} {}\n'.format(
+                                stripped[:13],
+                                translation.language_code,
+                                stripped[13:],
+                            )
 
-            with open(path, 'w') as handle:
-                handle.writelines(lines)
+                with open(path, 'w') as handle:
+                    handle.writelines(lines)
 
-            translation.addon_commit_files.append(path)
+                translation.addon_commit_files.append(path)
 
 
 class MsgmergeAddon(GettextBaseAddon, UpdateBaseAddon):
